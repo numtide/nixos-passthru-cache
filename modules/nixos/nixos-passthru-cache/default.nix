@@ -19,7 +19,7 @@
       };
     };
   };
-  config = {
+  config = lib.mkIf config.services.nixos-passthru-cache.enable {
     networking.firewall.allowedTCPPorts = [
       443
       80
