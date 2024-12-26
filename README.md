@@ -50,6 +50,26 @@ in your nixos configuration:
 }
 ```
 
+## Demo instances
+
+- We have deployed a binary cache at [https://hetzner-cache.numtide.com](https://hetzner-cache.numtide.com) for testing local caching in hetzner networks.
+- Location: Frankfurt, Uplink: 1G, Hardware: [AX52](https://www.hetzner.com/dedicated-rootserver/ax52/)
+
+Using this binary cache in your nixos configuration:
+
+```nix
+{
+  nix.settings.extra-substituters = [ "https://hetzner-cache.numtide.com" ];
+}
+```
+
+in your nix.conf
+
+```
+extra-substituters = https://hetzner-cache.numtide.com
+```
+
+
 ## TODO
 
 * Find a better project name
