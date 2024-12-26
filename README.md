@@ -23,6 +23,33 @@ More options will be made available later.
 * `$CACHE_DIR`: where the state will be stored. (default: `$PWD/data`)
 * `$CACHE_SIZE`: how much data to store on disk. (default: `10g`)
 
+## Usage in NixOS
+
+in your flake.nix:
+
+```
+inputs = {
+  nixos-passthru-cache = {
+    url = "github:numtide/nixos-passthru-cache/nixos-module";
+    inputs.blueprint.follows = "blueprint";
+    inputs.nixpkgs.follows = "nixpkgs";
+  };
+};
+```
+
+in your nixos configuration:
+
+```
+{
+  imports = [
+    inputs.nixos-passthru-cache.nixosModules.nixos-passthru-cache
+  ];
+
+  services.nixos-passthru-cache.hostName = "cache.your-domain.com";
+  # services.nixos-passthru-cache.cacheSize = "200G"; # Maximum cache size, 200GB is the default
+}
+```
+
 ## TODO
 
 * Find a better project name
