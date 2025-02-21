@@ -30,7 +30,7 @@ in your flake.nix:
 ```
 inputs = {
   nixos-passthru-cache = {
-    url = "github:numtide/nixos-passthru-cache/nixos-module";
+    url = "github:numtide/nixos-passthru-cache";
     inputs.blueprint.follows = "blueprint";
     inputs.nixpkgs.follows = "nixpkgs";
   };
