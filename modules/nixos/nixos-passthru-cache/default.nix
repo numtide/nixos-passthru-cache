@@ -3,6 +3,9 @@
   options = {
     services.nixos-passthru-cache = {
       enable = lib.mkEnableOption "Enable NixOS passthru cache";
+      forceSSL = lib.mkEnableOption "Force SSL usage via ACME" // {
+        default = true;
+      };
       hostName = lib.mkOption {
         type = lib.types.str;
         description = "The hostname of the passthru cache";
@@ -28,7 +31,7 @@
       enable = true;
       recommendedOptimisation = lib.mkDefault true;
       recommendedProxySettings = lib.mkDefault true;
-      recommendedTlsSettings = lib.mkDefault true;
+      recommendedTlsSettings = config.services.nixos-passthru-cache.forceSSL;
       proxyCachePath."nixos-passthru-cache" = {
         enable = true;
         levels = "1:2";
@@ -60,8 +63,8 @@
     };
 
     services.nginx.virtualHosts."nixos-passthru-cache" = {
-      enableACME = true;
-      forceSSL = true;
+      enableACME = config.services.nixos-passthru-cache.forceSSL;
+      forceSSL = config.services.nixos-passthru-cache.forceSSL;
       serverName = config.services.nixos-passthru-cache.hostName;
       locations."=/nix-cache-info" = {
         alias = "${../../../nix-cache-info}";
