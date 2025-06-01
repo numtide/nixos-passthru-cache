@@ -1,4 +1,7 @@
 { lib, config, ... }:
+let
+  cfg = config.services.nixos-passthru-cache;
+in
 {
   options = {
     services.nixos-passthru-cache = {
@@ -22,7 +25,7 @@
       };
     };
   };
-  config = lib.mkIf config.services.nixos-passthru-cache.enable {
+  config = lib.mkIf cfg.enable {
     networking.firewall.allowedTCPPorts = [
       443
       80
@@ -31,14 +34,14 @@
       enable = true;
       recommendedOptimisation = lib.mkDefault true;
       recommendedProxySettings = lib.mkDefault true;
-      recommendedTlsSettings = config.services.nixos-passthru-cache.forceSSL;
+      recommendedTlsSettings = cfg.forceSSL;
       proxyCachePath."nixos-passthru-cache" = {
         enable = true;
         levels = "1:2";
         keysZoneName = "nixos-passthru-cache";
         # Put our 2TB NVME raid0 to good use
-        maxSize = config.services.nixos-passthru-cache.cacheSize;
-        inactive = config.services.nixos-passthru-cache.inactivity;
+        maxSize = cfg.cacheSize;
+        inactive = cfg.inactivity;
         useTempPath = false;
       };
 
@@ -63,9 +66,9 @@
     };
 
     services.nginx.virtualHosts."nixos-passthru-cache" = {
-      enableACME = config.services.nixos-passthru-cache.forceSSL;
-      forceSSL = config.services.nixos-passthru-cache.forceSSL;
-      serverName = config.services.nixos-passthru-cache.hostName;
+      enableACME = cfg.forceSSL;
+      forceSSL = cfg.forceSSL;
+      serverName = cfg.hostName;
       locations."=/nix-cache-info" = {
         alias = "${../../../nix-cache-info}";
         extraConfig = ''
