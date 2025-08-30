@@ -1,5 +1,5 @@
 {
-  description = "my flake";
+  description = "nixos-passthru-cache - Pull-through cache for Nix";
 
   # Add all your dependencies here
   inputs = {
