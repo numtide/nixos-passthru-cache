@@ -63,6 +63,22 @@ Enable LAN auto-discovery and default to the machine hostname with TLS disabled.
 ```
 This publishes an `_http._tcp` Bonjour service on port 80 via Avahi and opens mDNS in the firewall.
 
+### Traffic Stats (NGINX VTS)
+
+In LAN mode, stats are enabled by default and exposed at `/status`. Otherwise, enable explicitly. Access is localhost-only unless LAN mode.
+
+```nix
+{
+  services.nixos-passthru-cache.enable = true;
+  # LAN mode auto-enables stats and opens them beyond localhost
+  # services.nixos-passthru-cache.lanMode = true;
+  # Otherwise, enable explicitly and set ACLs:
+  # services.nixos-passthru-cache.stats.enable = true;
+  # services.nixos-passthru-cache.stats.allowLocalOnly = false;
+}
+```
+Visit `https://<host>/status` (or `http://` if LAN mode) to view metrics.
+
 ## Demo instances
 
 - We have deployed a binary cache at [https://hetzner-cache.numtide.com](https://hetzner-cache.numtide.com) for testing local caching in hetzner networks.

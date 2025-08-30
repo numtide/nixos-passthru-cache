@@ -1,4 +1,9 @@
-{ lib, config, ... }:
+{
+  lib,
+  config,
+  pkgs,
+  ...
+}:
 let
   cfg = config.services.nixos-passthru-cache;
 in
@@ -9,8 +14,24 @@ in
       forceSSL = lib.mkEnableOption "Force SSL usage via ACME" // {
         default = true;
       };
-      lanMode = lib.mkEnableOption "Enable LAN (Bonjour/mDNS) auto-discovery; defaults hostName to system hostname and disables TLS." // {
-        default = false;
+      upstream = lib.mkOption {
+        type = lib.types.str;
+        default = "https://cache.nixos.org";
+        description = "Upstream binary cache URL to proxy (scheme+host, optional port/path).";
+      };
+      lanMode = lib.mkEnableOption "Enable LAN (Bonjour/mDNS) auto-discovery; defaults hostName to system hostname and disables TLS.";
+      stats = {
+        enable = lib.mkEnableOption "Expose NGINX VTS (traffic status) page";
+        path = lib.mkOption {
+          type = lib.types.str;
+          default = "/status";
+          description = "Path to serve the VTS status page (HTML).";
+        };
+        allowLocalOnly = lib.mkOption {
+          type = lib.types.bool;
+          default = true;
+          description = "Restrict access to localhost by default.";
+        };
       };
       hostName = lib.mkOption {
         type = lib.types.str;
@@ -36,6 +57,9 @@ in
       lib.mkDefault (config.networking.hostName + ".local")
     );
     services.nixos-passthru-cache.forceSSL = lib.mkIf cfg.lanMode (lib.mkDefault false);
+    # In LAN mode, enable stats by default and allow non-local access to stats & logs
+    services.nixos-passthru-cache.stats.enable = lib.mkIf cfg.lanMode (lib.mkDefault true);
+    services.nixos-passthru-cache.stats.allowLocalOnly = lib.mkIf cfg.lanMode (lib.mkDefault false);
 
     services.avahi = lib.mkIf cfg.lanMode {
       enable = true;
@@ -67,6 +91,11 @@ in
       recommendedOptimisation = lib.mkDefault true;
       recommendedProxySettings = lib.mkDefault true;
       recommendedTlsSettings = cfg.forceSSL;
+      additionalModules = lib.mkIf cfg.stats.enable [ pkgs.nginxModules.vts ];
+      # Add HTTP-level VTS shared memory zone when stats are enabled
+      appendHttpConfig = lib.mkIf cfg.stats.enable ''
+        vhost_traffic_status_zone;
+      '';
       proxyCachePath."nixos-passthru-cache" = {
         enable = true;
         levels = "1:2";
@@ -105,6 +134,18 @@ in
         alias = "${../../../nix-cache-info}";
         extraConfig = ''
           add_header Content-Type text/x-nix-cache-info;
+        '';
+      };
+      # VTS status page
+      locations."${cfg.stats.path}" = lib.mkIf cfg.stats.enable {
+        extraConfig = ''
+          vhost_traffic_status_display;
+          vhost_traffic_status_display_format html;
+          ${lib.optionalString cfg.stats.allowLocalOnly ''
+            allow 127.0.0.1;
+            allow ::1;
+            deny all;
+          ''}
         '';
       };
       locations."/" = {
@@ -147,5 +188,6 @@ in
       enable = true;
       params.nginx = { };
     };
+
   };
 }
