@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>nixos-passthru-cache — Pull‑Through Cache for Nix</title>
+    <meta name="description" content="Stop downloading the same bytes twice. Point Nix at @SCHEME@://@HOSTNAME@ and keep artifacts close. Faster builds, lower egress." />
+    <meta name="robots" content="noindex" />
+    <meta property="og:title" content="nixos-passthru-cache — Pull‑Through Cache for Nix" />
+    <meta property="og:description" content="Point Nix at @SCHEME@://@HOSTNAME@ to cache artifacts locally across your network." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="@SCHEME@://@HOSTNAME@" />
+    <style>
+      :root { --bg:#0f172a; --card:#111827; --fg:#e5e7eb; --muted:#58595B; --accent:#f58634; }
+      * { box-sizing: border-box; }
+      body { margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif; color:var(--fg); background:radial-gradient(1200px 600px at 20% -10%, rgba(245,134,52,0.25), transparent), radial-gradient(1200px 600px at 120% 10%, rgba(88,89,91,0.25), transparent), var(--bg); }
+      .wrap { max-width:960px; margin:0 auto; padding:48px 20px 80px; }
+      header { margin-bottom:28px; }
+      h1 { margin:0 0 8px; font-size:28px; }
+      p.lead { margin:0; color:var(--muted); }
+      .card { background:rgba(17,24,39,0.75); border:1px solid #1f2937; border-radius:12px; padding:20px; backdrop-filter: blur(8px); }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; font-size:0.93em; }
+      pre { background:#0b1220; color:#e5e7eb; padding:14px; border-radius:8px; border:1px solid #111827; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+      .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-top:16px; }
+      .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#0b1220; color:var(--accent); border:1px solid #1f2937; font-size:12px; }
+      .pill.beta { color:#22d3ee; }
+      a { color: var(--accent); text-decoration: none; }
+      footer { margin-top:32px; color:var(--muted); font-size:14px; }
+      .meta { margin-top:8px; color:var(--muted); font-size:14px; }
+      .row { display:flex; gap:8px; align-items:center; }
+      .btn { display:inline-block; padding:6px 10px; border-radius:8px; background:#0b1220; border:1px solid #1f2937; color:var(--fg); cursor:pointer; font-size:13px; }
+      .btn:hover { border-color:#334155; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <div class="row">
+          <span class="pill">nixos-passthru-cache</span>
+          <span class="pill beta" aria-label="Beta status">Beta</span>
+        </div>
+        <h1>Stop downloading the same bytes twice.</h1>
+        <p class="lead">Point Nix at <code>@SCHEME@://@HOSTNAME@</code> and keep artifacts close. Faster builds. Lower egress. Happier teams.</p>
+        <div class="meta">Upstream: <code>@UPSTREAM@</code> • This instance: <code>@HOSTNAME@</code> • Scheme: <code>@SCHEME@</code></div>
+      </header>
+
+      <section class="card" style="border-left:4px solid #22d3ee;">
+        <p style="margin:0 0 6px;">cache.nixos.org serves billions of requests and petabytes of data every month.</p>
+        <p style="margin:0;">Keep those bytes on your network. Spend your time — and your budget — on shipping, not redownloading.</p>
+      </section>
+
+      <div class="grid">
+        <section class="card">
+          <h2>Use This Cache (NixOS)</h2>
+          <div class="row">
+            <button class="btn" data-copy="{\n  nix.settings.extra-substituters = [ &quot;@SCHEME@://@HOSTNAME@&quot; ];\n}">Copy</button>
+            <span class="meta">Add to your system configuration</span>
+          </div>
+          <pre><code>{
+  nix.settings.extra-substituters = [ "@SCHEME@://@HOSTNAME@" ];
+}</code></pre>
+          <p>Replace the hostname if you access this via a different address.</p>
+        </section>
+
+        <section class="card">
+          <h2>Use This Cache (nix.conf)</h2>
+          <div class="row">
+            <button class="btn" data-copy="extra-substituters = @SCHEME@://@HOSTNAME@">Copy</button>
+            <span class="meta">Drop into <code>/etc/nix/nix.conf</code> or <code>~/.config/nix/nix.conf</code></span>
+          </div>
+          <pre><code>extra-substituters = @SCHEME@://@HOSTNAME@</code></pre>
+        </section>
+
+        <section class="card">
+          <h2>Health Checks</h2>
+          <pre><code>curl -I @SCHEME@://@HOSTNAME@/nix-cache-info
+curl -I @SCHEME@://@HOSTNAME@@STATS_PATH@   # stats (if enabled)</code></pre>
+          <p>Look for <code>X-Cache-Status</code> headers and HTTP 200 responses.</p>
+          @STATS_SECTION@
+        </section>
+
+        <section class="card">
+          <h2>Deploy Your Own</h2>
+          <p style="margin:0 0 8px;">NixOS (public hostname):</p>
+          <pre><code>{
+  imports = [ inputs.nixos-passthru-cache.nixosModules.nixos-passthru-cache ];
+  services.nixos-passthru-cache.enable = true;
+  services.nixos-passthru-cache.hostName = "cache.example.org";
+}</code></pre>
+          <p style="margin:8px 0 8px;">NixOS (LAN mode):</p>
+          <pre><code>{
+  services.nixos-passthru-cache.enable = true;
+  services.nixos-passthru-cache.lanMode = true; # defaults to hostname.local
+}</code></pre>
+          <p style="margin:8px 0 0;">Read more in the <a href="https://github.com/numtide/nixos-passthru-cache#readme">README</a>.</p>
+        </section>
+      </div>
+
+      <footer>
+        <p>Maintained by <a href="https://numtide.com" target="_blank" rel="noreferrer noopener">Numtide</a> • <a href="https://github.com/numtide/nixos-passthru-cache" target="_blank" rel="noreferrer noopener">Source on GitHub</a> • Powered by NGINX proxy caching.</p>
+      </footer>
+    </div>
+
+    <script>
+      (function(){
+        function copy(text, btn){
+          if (!navigator.clipboard) { return; }
+          navigator.clipboard.writeText(text).then(function(){
+            var old = btn.textContent; btn.textContent = 'Copied';
+            setTimeout(function(){ btn.textContent = old; }, 1200);
+          });
+        }
+        document.addEventListener('click', function(e){
+          var t = e.target.closest('[data-copy]');
+          if (!t) return;
+          e.preventDefault();
+          copy(t.getAttribute('data-copy'), t);
+        });
+      })();
+    </script>
+    </div>
+  </body>
+  </html>
