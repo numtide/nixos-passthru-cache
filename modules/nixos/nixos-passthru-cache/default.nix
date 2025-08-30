@@ -6,6 +6,15 @@
 }:
 let
   cfg = config.services.nixos-passthru-cache;
+  scheme = if cfg.forceSSL then "https" else "http";
+  statsSection = lib.optionalString cfg.stats.enable ''<p>Stats: <a href="${scheme}://${cfg.hostName}${cfg.stats.path}">${cfg.stats.path}</a></p>'';
+  indexPage = pkgs.replaceVars ./index.html.template {
+    HOSTNAME = cfg.hostName;
+    UPSTREAM = cfg.upstream;
+    SCHEME = scheme;
+    STATS_PATH = cfg.stats.path;
+    STATS_SECTION = statsSection;
+  };
 in
 {
   options = {
@@ -130,6 +139,14 @@ in
       enableACME = cfg.forceSSL;
       forceSSL = cfg.forceSSL;
       serverName = cfg.hostName;
+      # Landing page (exact match)
+      locations."=/" = {
+        root = "${builtins.dirOf indexPage}";
+        extraConfig = ''
+          try_files /${builtins.baseNameOf indexPage} =404;
+          default_type text/html;
+        '';
+      };
       locations."=/nix-cache-info" = {
         alias = "${./nix-cache-info}";
         extraConfig = ''
