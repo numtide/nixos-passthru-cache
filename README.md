@@ -50,6 +50,19 @@ in your nixos configuration:
 }
 ```
 
+### LAN mode (Bonjour/mDNS)
+
+Enable LAN auto-discovery and default to the machine hostname with TLS disabled. In LAN mode, the default hostname becomes `hostname.local` for mDNS:
+
+```nix
+{
+  services.nixos-passthru-cache.enable = true;
+  services.nixos-passthru-cache.lanMode = true;
+  # hostName will default to networking.hostName + ".local"; TLS (forceSSL) defaults to false
+}
+```
+This publishes an `_http._tcp` Bonjour service on port 80 via Avahi and opens mDNS in the firewall.
+
 ## Demo instances
 
 - We have deployed a binary cache at [https://hetzner-cache.numtide.com](https://hetzner-cache.numtide.com) for testing local caching in hetzner networks.
@@ -76,4 +89,3 @@ extra-substituters = https://hetzner-cache.numtide.com
 * Publish Docker image
 * Publish Helm chart
 * Publish NixOS module
-
