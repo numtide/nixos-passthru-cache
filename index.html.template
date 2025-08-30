@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>NixOS Passthru Cache</title>
     <style>
-      :root { --bg:#0f172a; --card:#111827; --fg:#e5e7eb; --muted:#94a3b8; --accent:#22d3ee; }
+      :root { --bg:#0f172a; --card:#111827; --fg:#e5e7eb; --muted:#58595B; --accent:#f58634; }
       * { box-sizing: border-box; }
-      body { margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif; color:var(--fg); background:radial-gradient(1200px 600px at 20% -10%, #164e63, transparent), radial-gradient(1200px 600px at 120% 10%, #334155, transparent), var(--bg); }
+      body { margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif; color:var(--fg); background:radial-gradient(1200px 600px at 20% -10%, rgba(245,134,52,0.25), transparent), radial-gradient(1200px 600px at 120% 10%, rgba(88,89,91,0.25), transparent), var(--bg); }
       .wrap { max-width:960px; margin:0 auto; padding:48px 20px 80px; }
       header { margin-bottom:28px; }
       h1 { margin:0 0 8px; font-size:28px; }
@@ -64,6 +64,22 @@
 curl -I @SCHEME@://@HOSTNAME@@STATS_PATH@   # stats (if enabled)</code></pre>
           <p>Look for <code>X-Cache-Status</code> headers and HTTP 200 responses.</p>
           @STATS_SECTION@
+        </section>
+
+        <section class="card">
+          <h2>Deploy Your Own</h2>
+          <p style="margin:0 0 8px;">NixOS (public hostname):</p>
+          <pre><code>{
+  imports = [ inputs.nixos-passthru-cache.nixosModules.nixos-passthru-cache ];
+  services.nixos-passthru-cache.enable = true;
+  services.nixos-passthru-cache.hostName = "cache.example.org";
+}</code></pre>
+          <p style="margin:8px 0 8px;">NixOS (LAN mode):</p>
+          <pre><code>{
+  services.nixos-passthru-cache.enable = true;
+  services.nixos-passthru-cache.lanMode = true; # defaults to hostname.local
+}</code></pre>
+          <p style="margin:8px 0 0;">Read more in the <a href="https://github.com/numtide/nixos-passthru-cache#readme">README</a>.</p>
         </section>
       </div>
 
