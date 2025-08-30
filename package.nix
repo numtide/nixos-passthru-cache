@@ -21,6 +21,7 @@ pkgs.stdenv.mkDerivation {
     cp ${./start-nginx.sh} $out/bin/nixos-cache-proxy
     cp ${./nginx.conf.template} $out/share/nixos-cache-proxy/nginx.conf.template
     cp ${./nix-cache-info} $out/share/nixos-cache-proxy/nix-cache-info
+    cp ${./index.html.template} $out/share/nixos-cache-proxy/index.html.template
 
     patchShebangs $out/bin
 

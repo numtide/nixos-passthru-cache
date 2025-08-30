@@ -6,6 +6,15 @@
 }:
 let
   cfg = config.services.nixos-passthru-cache;
+  scheme = if cfg.forceSSL then "https" else "http";
+  statsSection = lib.optionalString cfg.stats.enable ''<p>Stats: <a href="${scheme}://${cfg.hostName}${cfg.stats.path}">${cfg.stats.path}</a></p>'';
+  indexPage = pkgs.replaceVars ../../../index.html.template {
+    HOSTNAME = cfg.hostName;
+    UPSTREAM = cfg.upstream;
+    SCHEME = scheme;
+    STATS_PATH = cfg.stats.path;
+    STATS_SECTION = statsSection;
+  };
 in
 {
   options = {
@@ -130,6 +139,14 @@ in
       enableACME = cfg.forceSSL;
       forceSSL = cfg.forceSSL;
       serverName = cfg.hostName;
+      # Landing page (exact match)
+      locations."=/" = {
+        root = "${builtins.dirOf indexPage}";
+        extraConfig = ''
+          try_files /${builtins.baseNameOf indexPage} =404;
+          default_type text/html;
+        '';
+      };
       locations."=/nix-cache-info" = {
         alias = "${../../../nix-cache-info}";
         extraConfig = ''
@@ -150,15 +167,21 @@ in
       };
       locations."/" = {
         recommendedProxySettings = false;
-        proxyPass = "https://cache.nixos.org";
+        proxyPass = cfg.upstream;
         extraConfig = ''
           proxy_cache nixos-passthru-cache;
           proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
           proxy_cache_valid 200 60m;
           proxy_cache_valid 404 1m;
-          
+
           # Proxy headers - fixed syntax
-          proxy_set_header Host "cache.nixos.org";
+          proxy_set_header Host "${
+            let
+              # Extract host[:port] from URL
+              m = builtins.match "^[a-zA-Z0-9+.-]+://([^/]+).*" cfg.upstream;
+            in
+            if m == null then cfg.upstream else builtins.head m
+          }";
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Proto $scheme;
@@ -167,18 +190,18 @@ in
           # To address "could not build optimal proxy_headers_hash..."
           proxy_headers_hash_max_size 512;
           proxy_headers_hash_bucket_size 128;
-          
+
           # Timeouts
           proxy_connect_timeout 60s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
-          
+
           # Buffer settings
           proxy_buffering on;
           proxy_buffer_size 16k;
           proxy_buffers 4 32k;
           proxy_busy_buffers_size 64k;
-          
+
           # Optional: Add custom headers
           add_header X-Cache-Status $upstream_cache_status;
         '';

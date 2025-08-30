@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NixOS Passthru Cache</title>
+    <style>
+      :root { --bg:#0f172a; --card:#111827; --fg:#e5e7eb; --muted:#94a3b8; --accent:#22d3ee; }
+      * { box-sizing: border-box; }
+      body { margin:0; font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, sans-serif; color:var(--fg); background:radial-gradient(1200px 600px at 20% -10%, #164e63, transparent), radial-gradient(1200px 600px at 120% 10%, #334155, transparent), var(--bg); }
+      .wrap { max-width:960px; margin:0 auto; padding:48px 20px 80px; }
+      header { margin-bottom:28px; }
+      h1 { margin:0 0 8px; font-size:28px; }
+      p.lead { margin:0; color:var(--muted); }
+      .card { background:rgba(17,24,39,0.75); border:1px solid #1f2937; border-radius:12px; padding:20px; backdrop-filter: blur(8px); }
+      code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono, monospace; font-size:0.93em; }
+      pre { background:#0b1220; color:#e5e7eb; padding:14px; border-radius:8px; border:1px solid #111827; white-space: pre-wrap; word-break: break-word; overflow-wrap: anywhere; }
+      .grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:16px; margin-top:16px; }
+      .pill { display:inline-block; padding:2px 8px; border-radius:999px; background:#0b1220; color:var(--accent); border:1px solid #1f2937; font-size:12px; }
+      a { color: var(--accent); text-decoration: none; }
+      footer { margin-top:32px; color:var(--muted); font-size:14px; }
+      .meta { margin-top:8px; color:var(--muted); font-size:14px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <header>
+        <span class="pill">nixos-passthru-cache</span>
+        <h1>Local Pull‑Through Cache for Nix</h1>
+        <p class="lead">This proxy caches artifacts from <code>@UPSTREAM@</code> to reduce egress and speed up builds across your network.</p>
+        <div class="meta">This instance: <code>@HOSTNAME@</code> • Scheme: <code>@SCHEME@</code></div>
+      </header>
+
+      <div class="grid">
+        <section class="card">
+          <h2>Quick Start (NixOS)</h2>
+          <pre><code>{
+  # Add the cache URL to your system
+  nix.settings.extra-substituters = [ "@SCHEME@://@HOSTNAME@" ];
+  # Optionally trust its public key if you sign locally (not required for passthru)
+  # nix.settings.trusted-public-keys = [ "cache.example.org-1:…" ];
+}</code></pre>
+          <p>Replace the hostname if you access this via a different address.</p>
+        </section>
+
+        <section class="card">
+          <h2>Quick Start (nix.conf)</h2>
+          <pre><code>extra-substituters = @SCHEME@://@HOSTNAME@</code></pre>
+          <p>Apply in <code>/etc/nix/nix.conf</code> or user-level <code>~/.config/nix/nix.conf</code>.</p>
+        </section>
+
+        <section class="card">
+          <h2>Health Checks</h2>
+          <pre><code>curl -I @SCHEME@://@HOSTNAME@/nix-cache-info
+curl -I @SCHEME@://@HOSTNAME@@STATS_PATH@   # stats (if enabled)</code></pre>
+          <p>Look for <code>X-Cache-Status</code> headers and HTTP 200 responses.</p>
+          @STATS_SECTION@
+        </section>
+      </div>
+
+      <footer>
+        <p>Powered by NGINX proxy caching.</p>
+      </footer>
+    </div>
+  </body>
+  </html>
