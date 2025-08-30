@@ -31,6 +31,15 @@
         <div class="meta">This instance: <code>@HOSTNAME@</code> • Scheme: <code>@SCHEME@</code></div>
       </header>
 
+      <section class="card" style="border-left:4px solid #22d3ee;">
+        <p style="margin:0 0 6px;">
+          As of Aug 30, 2025, <code>cache.nixos.org</code> serves <strong>7.20B</strong> requests and <strong>3.56&nbsp;PB</strong> of data per month.
+        </p>
+        <p style="margin:0;">
+          This project helps companies deploy local pull‑through caches to reduce load on <code>cache.nixos.org</code> and speed up builds.
+        </p>
+      </section>
+
       <div class="grid">
         <section class="card">
           <h2>Quick Start (NixOS)</h2>

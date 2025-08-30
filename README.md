@@ -12,6 +12,10 @@ https://cache.nixos.org you can easily deploy into your infrastructure.
 
 Then have the clients re-configure their cache, and you have a win.
 
+## Why
+
+As of 2025-08-30, cache.nixos.org serves roughly 7.20B requests and 3.56 PB of data every month. This project encourages organizations to run local pull‑through caches to reduce load and egress on cache.nixos.org while speeding up builds for their users.
+
 ## Usage
 
 Clone the repo and execute `nix run` to launch the cache on port 8080.
