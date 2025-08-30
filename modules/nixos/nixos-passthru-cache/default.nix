@@ -77,7 +77,7 @@ in
       };
       locations."/" = {
         recommendedProxySettings = false;
-        proxyPass = "https://cache.nixos.org";
+        proxyPass = cfg.upstream;
         extraConfig = ''
           proxy_cache nixos-passthru-cache;
           proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
@@ -85,7 +85,13 @@ in
           proxy_cache_valid 404 1m;
 
           # Proxy headers - fixed syntax
-          proxy_set_header Host "cache.nixos.org";
+          proxy_set_header Host "${
+            let
+              # Extract host[:port] from URL
+              m = builtins.match "^[a-zA-Z0-9+.-]+://([^/]+).*" cfg.upstream;
+            in
+            if m == null then cfg.upstream else builtins.head m
+          }";
           proxy_set_header X-Real-IP $remote_addr;
           proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
           proxy_set_header X-Forwarded-Proto $scheme;
