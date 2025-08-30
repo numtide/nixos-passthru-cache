@@ -83,7 +83,7 @@ in
           proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
           proxy_cache_valid 200 60m;
           proxy_cache_valid 404 1m;
-          
+
           # Proxy headers - fixed syntax
           proxy_set_header Host "cache.nixos.org";
           proxy_set_header X-Real-IP $remote_addr;
@@ -94,18 +94,18 @@ in
           # To address "could not build optimal proxy_headers_hash..."
           proxy_headers_hash_max_size 512;
           proxy_headers_hash_bucket_size 128;
-          
+
           # Timeouts
           proxy_connect_timeout 60s;
           proxy_send_timeout 60s;
           proxy_read_timeout 60s;
-          
+
           # Buffer settings
           proxy_buffering on;
           proxy_buffer_size 16k;
           proxy_buffers 4 32k;
           proxy_busy_buffers_size 64k;
-          
+
           # Optional: Add custom headers
           add_header X-Cache-Status $upstream_cache_status;
         '';
