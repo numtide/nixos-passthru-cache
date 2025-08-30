@@ -1,26 +1,26 @@
-# nixos-cache-proxy
+# nixos-passthru-cache
 
-**status: alpha**
+Stop paying to download the same bytes twice.
 
-Target public: companies, institutions and event organizers that want to
-               reduce their egress traffic to https://cache.nixos.org.
+Status: Beta - solid core; interfaces may still change.
 
-## What is it?
+Maintained by Numtide.
 
-This project is a (soon) battle-tested pull-thru cache for
-https://cache.nixos.org you can easily deploy into your infrastructure.
+## What It Is
 
-Then have the clients re-configure their cache, and you have a win.
+A drop‑in, pull‑through cache for Nix. Put it on your network, point your machines at it, and watch egress fall while builds get faster.
 
-## Usage
+## Who It’s For
 
-This project is delivered as a NixOS module. Add it to your NixOS
-configuration (see below) and enable the service. Local ad‑hoc runtime
-via `nix run` has been removed to keep the project focused and consistent.
+Infra and platform teams running many Nix machines - enterprises, universities, events. Anywhere repeating downloads hurt cost and speed.
 
-## Usage in NixOS
+## Why It Matters
 
-in your flake.nix:
+cache.nixos.org serves billions of requests and petabytes of data every month. Caching locally keeps those bytes close - and your bill lower.
+
+## Quick Start (Server on NixOS)
+
+In your `flake.nix`:
 
 ```
 inputs = {
@@ -32,56 +32,86 @@ inputs = {
 };
 ```
 
-in your nixos configuration:
+In your NixOS configuration:
 
 ```
 {
-  imports = [
-    inputs.nixos-passthru-cache.nixosModules.nixos-passthru-cache
-  ];
+  imports = [ inputs.nixos-passthru-cache.nixosModules.nixos-passthru-cache ];
 
-  services.nixos-passthru-cache.hostName = "cache.your-domain.com";
+  services.nixos-passthru-cache.enable = true;
+  services.nixos-passthru-cache.hostName = "cache.example.org";
   # Optional: change upstream (defaults to https://cache.nixos.org)
   # services.nixos-passthru-cache.upstream = "https://my-upstream-cache.example";
-  # services.nixos-passthru-cache.cacheSize = "200G"; # Maximum cache size, 200GB is the default
+  # Optional: adjust cache size (default 200G)
+  # services.nixos-passthru-cache.cacheSize = "500G";
 }
 ```
 
-### LAN mode (Bonjour/mDNS)
+## Point Clients At It
 
-Enable LAN auto-discovery and default to the machine hostname with TLS disabled. In LAN mode, the default hostname becomes `hostname.local` for mDNS:
+NixOS:
+
+```nix
+{
+  nix.settings.extra-substituters = [ "https://cache.example.org" ];
+}
+```
+
+`nix.conf`:
+
+```
+extra-substituters = https://cache.example.org
+```
+
+## Validate
+
+```
+curl -I https://cache.example.org/nix-cache-info
+```
+
+Look for HTTP 200. You’ll also see `X-Cache-Status` headers on proxied requests.
+
+## Zero‑Config LAN Mode (Bonjour/mDNS)
+
+For trusted LANs: discoverable, no‑TLS, mDNS hostname (`hostname.local`).
 
 ```nix
 {
   services.nixos-passthru-cache.enable = true;
   services.nixos-passthru-cache.lanMode = true;
-  # hostName will default to networking.hostName + ".local"; TLS (forceSSL) defaults to false
+  # hostName defaults to networking.hostName + ".local"
+  # TLS (forceSSL) defaults to false
 }
 ```
+
 This publishes an `_http._tcp` Bonjour service on port 80 via Avahi and opens mDNS in the firewall.
 
-### Traffic Stats (NGINX VTS)
+## Traffic Stats (NGINX VTS)
 
-In LAN mode, stats are enabled by default and exposed at `/status`. Otherwise, enable explicitly. Access is localhost-only unless LAN mode.
+See traffic, hit/miss, and cache health.
+
+- Path: `/status`
+- Defaults: enabled in LAN mode; otherwise off and localhost‑only
+
+Enable explicitly when not in LAN mode:
 
 ```nix
 {
   services.nixos-passthru-cache.enable = true;
-  # LAN mode auto-enables stats and opens them beyond localhost
-  # services.nixos-passthru-cache.lanMode = true;
-  # Otherwise, enable explicitly and set ACLs:
-  # services.nixos-passthru-cache.stats.enable = true;
+  services.nixos-passthru-cache.stats.enable = true;
+  # Optional: open beyond localhost
   # services.nixos-passthru-cache.stats.allowLocalOnly = false;
 }
 ```
-Visit `https://<host>/status` (or `http://` if LAN mode) to view metrics.
 
-## Demo instances
+Visit `https://cache.example.org/status` (or `http://` in LAN mode).
 
-- We have deployed a binary cache at [https://hetzner-cache.numtide.com](https://hetzner-cache.numtide.com) for testing local caching in hetzner networks.
-- Location: Frankfurt, Uplink: 1G, Hardware: [AX52](https://www.hetzner.com/dedicated-rootserver/ax52/)
+## Demo Cache (Best‑Effort)
 
-Using this binary cache in your nixos configuration:
+- Hetzner (Frankfurt): https://hetzner-cache.numtide.com — useful if you run in Hetzner networks
+- Uplink: 1G • Hardware: AX52
+
+Use it from NixOS:
 
 ```nix
 {
@@ -89,16 +119,18 @@ Using this binary cache in your nixos configuration:
 }
 ```
 
-in your nix.conf
+Or from `nix.conf`:
 
 ```
 extra-substituters = https://hetzner-cache.numtide.com
 ```
 
+## Operate
 
-## TODO
+- Default cache size: 200G (tunable)
+- Ports: 80/443 (TLS on by default unless LAN mode)
+- Health: `curl -I /nix-cache-info` and check `/status` if enabled
 
-* Find a better project name
-* Publish NixOS module
-* Also support Docker / Helm environments
-* Add NixOS VM/integration tests
+## Support
+
+Maintained by Numtide. Issues and contributions welcome.
