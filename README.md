@@ -14,14 +14,9 @@ Then have the clients re-configure their cache, and you have a win.
 
 ## Usage
 
-Clone the repo and execute `nix run` to launch the cache on port 8080.
-More options will be made available later.
-
-## Configuration
-
-* `$CACHE_ADDR`: on which port to bind the server (default: `[::]:8080`)
-* `$CACHE_DIR`: where the state will be stored. (default: `$PWD/data`)
-* `$CACHE_SIZE`: how much data to store on disk. (default: `10g`)
+This project is delivered as a NixOS module. Add it to your NixOS
+configuration (see below) and enable the service. Local ad‑hoc runtime
+via `nix run` has been removed to keep the project focused and consistent.
 
 ## Usage in NixOS
 
@@ -73,7 +68,6 @@ extra-substituters = https://hetzner-cache.numtide.com
 ## TODO
 
 * Find a better project name
-* Publish Docker image
-* Publish Helm chart
 * Publish NixOS module
-
+* Also support Docker / Helm environments
+* Add NixOS VM/integration tests

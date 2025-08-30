@@ -70,7 +70,7 @@ in
       forceSSL = cfg.forceSSL;
       serverName = cfg.hostName;
       locations."=/nix-cache-info" = {
-        alias = "${../../../nix-cache-info}";
+        alias = "${./nix-cache-info}";
         extraConfig = ''
           add_header Content-Type text/x-nix-cache-info;
         '';

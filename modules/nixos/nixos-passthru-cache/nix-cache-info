@@ -1,3 +1,4 @@
 StoreDir: /nix/store
 WantMassQuery: 1
-Priority: 39
+Priority: 40
+Allow: *
