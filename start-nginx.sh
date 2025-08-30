@@ -16,6 +16,7 @@ STATS_ENABLED=${STATS_ENABLED:-"0"}
 NGINX_CONF_PATH=${CACHE_DIR}/nginx.conf
 INDEX_HTML_PATH=${CACHE_DIR}/index.html
 NGINX_SERVER_NAME=${NGINX_SERVER_NAME:-"localhost"}
+LAN_MODE=${LAN_MODE:-"0"}
 
 # Create required directories
 mkdir -p "${CACHE_DIR}"
