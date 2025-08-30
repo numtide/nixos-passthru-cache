@@ -9,6 +9,7 @@ in
       forceSSL = lib.mkEnableOption "Force SSL usage via ACME" // {
         default = true;
       };
+      lanMode = lib.mkEnableOption "Enable LAN (Bonjour/mDNS) auto-discovery";
       hostName = lib.mkOption {
         type = lib.types.str;
         description = "The hostname of the passthru cache";
@@ -26,6 +27,35 @@ in
     };
   };
   config = lib.mkIf cfg.enable {
+    # LAN mode: advertise via Avahi, default hostName to system hostname,
+    # and prefer plain HTTP by default (no TLS)
+    services.nixos-passthru-cache.hostName = lib.mkIf cfg.lanMode (
+      # In LAN mode default to mDNS hostname (hostname.local)
+      lib.mkDefault (config.networking.hostName + ".local")
+    );
+    services.nixos-passthru-cache.forceSSL = lib.mkIf cfg.lanMode (lib.mkDefault false);
+
+    services.avahi = lib.mkIf cfg.lanMode {
+      enable = true;
+      openFirewall = lib.mkDefault true;
+      publish.enable = true;
+      publish.userServices = true;
+      extraServiceFiles = {
+        "nixos-passthru-cache.service" = ''
+          <?xml version="1.0" standalone='no'?>
+          <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+          <service-group>
+            <name replace-wildcards="yes">%h Nix cache</name>
+            <service>
+              <type>_http._tcp</type>
+              <port>80</port>
+              <txt-record>path=/</txt-record>
+              <txt-record>nix-cache=1</txt-record>
+            </service>
+          </service-group>
+        '';
+      };
+    };
     networking.firewall.allowedTCPPorts = [
       443
       80
