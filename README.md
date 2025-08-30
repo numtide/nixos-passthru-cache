@@ -41,6 +41,8 @@ in your nixos configuration:
   ];
 
   services.nixos-passthru-cache.hostName = "cache.your-domain.com";
+  # Optional: change upstream (defaults to https://cache.nixos.org)
+  # services.nixos-passthru-cache.upstream = "https://my-upstream-cache.example";
   # services.nixos-passthru-cache.cacheSize = "200G"; # Maximum cache size, 200GB is the default
 }
 ```
