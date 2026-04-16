@@ -47,6 +47,15 @@ In your NixOS configuration:
 }
 ```
 
+TLS/ACME (when `forceSSL = true`, the default):
+
+```
+security.acme = {
+  acceptTerms = true;
+  defaults.email = "ops@example.org";
+};
+```
+
 ## Point Clients At It
 
 NixOS:
@@ -134,3 +143,7 @@ extra-substituters = https://hetzner-cache.numtide.com
 ## Support
 
 Maintained by Numtide. Issues and contributions welcome.
+
+## License
+
+MIT — see `LICENSE`.
