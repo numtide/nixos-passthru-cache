@@ -130,88 +130,88 @@ in
           resolvers =
             if config.networking.nameservers == [ ] then cloudflare else config.networking.nameservers;
         in
-        map escapeIPv6 resolvers;
+          map escapeIPv6 resolvers;
 
+      virtualHosts."nixos-passthru-cache" = {
+        enableACME = cfg.forceSSL;
+        forceSSL = cfg.forceSSL;
+        serverName = cfg.hostName;
+        # Landing page (exact match)
+        locations."=/" = {
+          root = "${builtins.dirOf indexPage}";
+          extraConfig = ''
+            try_files /${builtins.baseNameOf indexPage} =404;
+            default_type text/html;
+          '';
+        };
+        locations."=/nix-cache-info" = {
+          alias = "${./nix-cache-info}";
+          extraConfig = ''
+            add_header Content-Type text/x-nix-cache-info;
+          '';
+        };
+        # VTS status page
+        locations."${cfg.stats.path}" = lib.mkIf cfg.stats.enable {
+          extraConfig = ''
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+            ${lib.optionalString cfg.stats.allowLocalOnly ''
+              allow 127.0.0.1;
+              allow ::1;
+              deny all;
+            ''}
+          '';
+        };
+        locations."/" = {
+          recommendedProxySettings = false;
+          proxyPass = cfg.upstream;
+          extraConfig = ''
+            proxy_cache nixos-passthru-cache;
+            proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
+            proxy_cache_valid 200 60m;
+            proxy_cache_valid 404 1m;
+
+            # Proxy headers - fixed syntax
+            proxy_set_header Host "${
+              let
+                # Extract host[:port] from URL
+                m = builtins.match "^[a-zA-Z0-9+.-]+://([^/]+).*" cfg.upstream;
+              in
+              if m == null then cfg.upstream else builtins.head m
+            }";
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_http_version 1.1;
+
+            # To address "could not build optimal proxy_headers_hash..."
+            proxy_headers_hash_max_size 512;
+            proxy_headers_hash_bucket_size 128;
+
+            # Timeouts
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+
+            # Buffer settings
+            proxy_buffering on;
+            proxy_buffer_size 16k;
+            proxy_buffers 4 32k;
+            proxy_busy_buffers_size 64k;
+
+            # Optional: Add custom headers
+            add_header X-Cache-Status $upstream_cache_status;
+          '';
+        };
+      };
+    } // (lib.optionalAttrs (lib.versionOlder (lib.versions.majorMinor config.system.nixos.release) "26.11") {
       sslDhparam =
-        if (lib.versionOlder (lib.versions.majorMinor lib.version) "26.05") then
+        if (lib.versionOlder (lib.versions.majorMinor config.system.nixos.release) "26.05") then
           config.security.dhparams.params.nginx.path
         else
           true;
-    };
-
-    services.nginx.virtualHosts."nixos-passthru-cache" = {
-      enableACME = cfg.forceSSL;
-      forceSSL = cfg.forceSSL;
-      serverName = cfg.hostName;
-      # Landing page (exact match)
-      locations."=/" = {
-        root = "${builtins.dirOf indexPage}";
-        extraConfig = ''
-          try_files /${builtins.baseNameOf indexPage} =404;
-          default_type text/html;
-        '';
-      };
-      locations."=/nix-cache-info" = {
-        alias = "${./nix-cache-info}";
-        extraConfig = ''
-          add_header Content-Type text/x-nix-cache-info;
-        '';
-      };
-      # VTS status page
-      locations."${cfg.stats.path}" = lib.mkIf cfg.stats.enable {
-        extraConfig = ''
-          vhost_traffic_status_display;
-          vhost_traffic_status_display_format html;
-          ${lib.optionalString cfg.stats.allowLocalOnly ''
-            allow 127.0.0.1;
-            allow ::1;
-            deny all;
-          ''}
-        '';
-      };
-      locations."/" = {
-        recommendedProxySettings = false;
-        proxyPass = cfg.upstream;
-        extraConfig = ''
-          proxy_cache nixos-passthru-cache;
-          proxy_cache_use_stale error timeout http_500 http_502 http_503 http_504;
-          proxy_cache_valid 200 60m;
-          proxy_cache_valid 404 1m;
-
-          # Proxy headers - fixed syntax
-          proxy_set_header Host "${
-            let
-              # Extract host[:port] from URL
-              m = builtins.match "^[a-zA-Z0-9+.-]+://([^/]+).*" cfg.upstream;
-            in
-            if m == null then cfg.upstream else builtins.head m
-          }";
-          proxy_set_header X-Real-IP $remote_addr;
-          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-          proxy_set_header X-Forwarded-Proto $scheme;
-          proxy_http_version 1.1;
-
-          # To address "could not build optimal proxy_headers_hash..."
-          proxy_headers_hash_max_size 512;
-          proxy_headers_hash_bucket_size 128;
-
-          # Timeouts
-          proxy_connect_timeout 60s;
-          proxy_send_timeout 60s;
-          proxy_read_timeout 60s;
-
-          # Buffer settings
-          proxy_buffering on;
-          proxy_buffer_size 16k;
-          proxy_buffers 4 32k;
-          proxy_busy_buffers_size 64k;
-
-          # Optional: Add custom headers
-          add_header X-Cache-Status $upstream_cache_status;
-        '';
-      };
-    };
-    security.dhparams = {
+    });
+    security.dhparams = lib.mkIf (lib.versionOlder (lib.versions.majorMinor config.system.nixos.release) "26.11") {
       enable = true;
     }
     // lib.optionalAttrs (lib.versionOlder (lib.versions.majorMinor lib.version) "26.05") {
