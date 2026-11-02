@@ -2,6 +2,7 @@
   lib,
   config,
   pkgs,
+  options,
   ...
 }:
 let
@@ -115,8 +116,9 @@ in
         useTempPath = false;
       };
 
+      ${if options.services.nginx ? workerProcesses then "workerProcesses" else null} = "auto";
       # TODO: test if this improves performance
-      appendConfig = ''
+      ${if options.services.nginx ? workerProcesses then null else "appendConfig"} = ''
         worker_processes auto;
       '';
       resolver.addresses =
